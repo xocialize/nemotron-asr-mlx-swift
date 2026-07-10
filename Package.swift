@@ -25,8 +25,7 @@ let package = Package(
         .package(url: "https://github.com/ml-explore/mlx-swift", from: "0.25.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         // Shared STFT/mel primitives (windows, framing, spectra, filterbank apply).
-        // Local path while in WIP; switch to the xocialize URL on PROD promotion.
-        .package(path: "../../PROD/mlx-audio-dsp"),
+        .package(url: "https://github.com/xocialize/mlx-audio-dsp.git", from: "0.1.0"),
     ],
     targets: [
         .target(
