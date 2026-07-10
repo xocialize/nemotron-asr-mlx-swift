@@ -1,0 +1,24 @@
+{
+ "weights_repo": "mlx-community/nemotron-3.5-asr-streaming-0.6b",
+ "wav": "en_16k.wav",
+ "acs": [
+  56,
+  13
+ ],
+ "device": "cpu",
+ "activation_dtype": "float32",
+ "mlx": "0.32.0",
+ "mlx_audio": "0.4.5",
+ "n_inner_encode_chunks": 11,
+ "n_decode_steps_total": 254,
+ "n_layers": 24,
+ "captured_block_chunks": [
+  0,
+  2
+ ],
+ "captured_enc_chunks": [
+  0,
+  1,
+  2
+ ]
+}

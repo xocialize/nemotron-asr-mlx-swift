@@ -1,0 +1,592 @@
+{
+ "text": "Hello there, I wanted to ask you about the plans we made for the weekend do you think the weather will hold up for the hike, or should we move it to Sunday instead?  Also remind me to pick up groceries on the way home.",
+ "tokens": [
+  {
+   "id": 2777,
+   "text": " H",
+   "start": 0.16,
+   "duration": 0.08
+  },
+  {
+   "id": 436,
+   "text": "el",
+   "start": 0.16,
+   "duration": 0.08
+  },
+  {
+   "id": 290,
+   "text": "lo",
+   "start": 0.4,
+   "duration": 0.08
+  },
+  {
+   "id": 2828,
+   "text": " there",
+   "start": 0.64,
+   "duration": 0.08
+  },
+  {
+   "id": 6,
+   "text": ",",
+   "start": 1.12,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 1.12,
+   "duration": 0.08
+  },
+  {
+   "id": 179,
+   "text": "I",
+   "start": 1.12,
+   "duration": 0.08
+  },
+  {
+   "id": 1721,
+   "text": " want",
+   "start": 1.2,
+   "duration": 0.08
+  },
+  {
+   "id": 2816,
+   "text": "ed",
+   "start": 1.36,
+   "duration": 0.08
+  },
+  {
+   "id": 12945,
+   "text": " t",
+   "start": 1.52,
+   "duration": 0.08
+  },
+  {
+   "id": 46,
+   "text": "o",
+   "start": 1.52,
+   "duration": 0.08
+  },
+  {
+   "id": 2900,
+   "text": " ask",
+   "start": 1.6,
+   "duration": 0.08
+  },
+  {
+   "id": 2810,
+   "text": " you",
+   "start": 1.76,
+   "duration": 0.08
+  },
+  {
+   "id": 2856,
+   "text": " about",
+   "start": 2.24,
+   "duration": 0.08
+  },
+  {
+   "id": 150,
+   "text": " the",
+   "start": 2.32,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 2.48,
+   "duration": 0.08
+  },
+  {
+   "id": 97,
+   "text": "p",
+   "start": 2.48,
+   "duration": 0.08
+  },
+  {
+   "id": 9832,
+   "text": "lan",
+   "start": 2.48,
+   "duration": 0.08
+  },
+  {
+   "id": 40,
+   "text": "s",
+   "start": 2.56,
+   "duration": 0.08
+  },
+  {
+   "id": 1607,
+   "text": " we",
+   "start": 2.88,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 3.04,
+   "duration": 0.08
+  },
+  {
+   "id": 815,
+   "text": "ma",
+   "start": 3.04,
+   "duration": 0.08
+  },
+  {
+   "id": 297,
+   "text": "de",
+   "start": 3.12,
+   "duration": 0.08
+  },
+  {
+   "id": 398,
+   "text": " for",
+   "start": 3.28,
+   "duration": 0.08
+  },
+  {
+   "id": 150,
+   "text": " the",
+   "start": 3.44,
+   "duration": 0.08
+  },
+  {
+   "id": 1607,
+   "text": " we",
+   "start": 3.52,
+   "duration": 0.08
+  },
+  {
+   "id": 1133,
+   "text": "ek",
+   "start": 3.52,
+   "duration": 0.08
+  },
+  {
+   "id": 1065,
+   "text": "end",
+   "start": 3.76,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 4.56,
+   "duration": 0.08
+  },
+  {
+   "id": 1288,
+   "text": "do",
+   "start": 4.56,
+   "duration": 0.08
+  },
+  {
+   "id": 2810,
+   "text": " you",
+   "start": 4.64,
+   "duration": 0.08
+  },
+  {
+   "id": 2897,
+   "text": " think",
+   "start": 4.72,
+   "duration": 0.08
+  },
+  {
+   "id": 150,
+   "text": " the",
+   "start": 4.88,
+   "duration": 0.08
+  },
+  {
+   "id": 1607,
+   "text": " we",
+   "start": 5.04,
+   "duration": 0.08
+  },
+  {
+   "id": 38,
+   "text": "a",
+   "start": 5.12,
+   "duration": 0.08
+  },
+  {
+   "id": 2961,
+   "text": "ther",
+   "start": 5.12,
+   "duration": 0.08
+  },
+  {
+   "id": 2834,
+   "text": " will",
+   "start": 5.36,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 5.6,
+   "duration": 0.08
+  },
+  {
+   "id": 489,
+   "text": "hold",
+   "start": 5.6,
+   "duration": 0.08
+  },
+  {
+   "id": 2867,
+   "text": " up",
+   "start": 5.76,
+   "duration": 0.08
+  },
+  {
+   "id": 398,
+   "text": " for",
+   "start": 5.92,
+   "duration": 0.08
+  },
+  {
+   "id": 150,
+   "text": " the",
+   "start": 6.08,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 6.24,
+   "duration": 0.08
+  },
+  {
+   "id": 2833,
+   "text": "hi",
+   "start": 6.24,
+   "duration": 0.08
+  },
+  {
+   "id": 851,
+   "text": "ke",
+   "start": 6.4,
+   "duration": 0.08
+  },
+  {
+   "id": 6,
+   "text": ",",
+   "start": 6.88,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 6.88,
+   "duration": 0.08
+  },
+  {
+   "id": 409,
+   "text": "or",
+   "start": 6.88,
+   "duration": 0.08
+  },
+  {
+   "id": 2922,
+   "text": " should",
+   "start": 7.04,
+   "duration": 0.08
+  },
+  {
+   "id": 1607,
+   "text": " we",
+   "start": 7.2,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 7.28,
+   "duration": 0.08
+  },
+  {
+   "id": 318,
+   "text": "mo",
+   "start": 7.28,
+   "duration": 0.08
+  },
+  {
+   "id": 306,
+   "text": "ve",
+   "start": 7.36,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 7.44,
+   "duration": 0.08
+  },
+  {
+   "id": 528,
+   "text": "it",
+   "start": 7.44,
+   "duration": 0.08
+  },
+  {
+   "id": 12945,
+   "text": " t",
+   "start": 7.6,
+   "duration": 0.08
+  },
+  {
+   "id": 46,
+   "text": "o",
+   "start": 7.6,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 7.92,
+   "duration": 0.08
+  },
+  {
+   "id": 193,
+   "text": "S",
+   "start": 7.92,
+   "duration": 0.08
+  },
+  {
+   "id": 600,
+   "text": "und",
+   "start": 7.92,
+   "duration": 0.08
+  },
+  {
+   "id": 2819,
+   "text": "ay",
+   "start": 8.16,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 8.48,
+   "duration": 0.08
+  },
+  {
+   "id": 125,
+   "text": "in",
+   "start": 8.48,
+   "duration": 0.08
+  },
+  {
+   "id": 442,
+   "text": "ste",
+   "start": 8.56,
+   "duration": 0.08
+  },
+  {
+   "id": 2955,
+   "text": "ad",
+   "start": 8.72,
+   "duration": 0.08
+  },
+  {
+   "id": 163,
+   "text": "?",
+   "start": 8.96,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 8.96,
+   "duration": 0.08
+  },
+  {
+   "id": 632,
+   "text": " Also",
+   "start": 9.2,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 9.76,
+   "duration": 0.08
+  },
+  {
+   "id": 311,
+   "text": "re",
+   "start": 9.76,
+   "duration": 0.08
+  },
+  {
+   "id": 299,
+   "text": "mi",
+   "start": 9.92,
+   "duration": 0.08
+  },
+  {
+   "id": 834,
+   "text": "nd",
+   "start": 10.0,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 10.16,
+   "duration": 0.08
+  },
+  {
+   "id": 271,
+   "text": "me",
+   "start": 10.16,
+   "duration": 0.08
+  },
+  {
+   "id": 12945,
+   "text": " t",
+   "start": 10.24,
+   "duration": 0.08
+  },
+  {
+   "id": 46,
+   "text": "o",
+   "start": 10.24,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 10.4,
+   "duration": 0.08
+  },
+  {
+   "id": 1296,
+   "text": "pi",
+   "start": 10.4,
+   "duration": 0.08
+  },
+  {
+   "id": 550,
+   "text": "ck",
+   "start": 10.48,
+   "duration": 0.08
+  },
+  {
+   "id": 2867,
+   "text": " up",
+   "start": 10.56,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 11.2,
+   "duration": 0.08
+  },
+  {
+   "id": 119,
+   "text": "g",
+   "start": 11.2,
+   "duration": 0.08
+  },
+  {
+   "id": 280,
+   "text": "ro",
+   "start": 11.2,
+   "duration": 0.08
+  },
+  {
+   "id": 73,
+   "text": "c",
+   "start": 11.28,
+   "duration": 0.08
+  },
+  {
+   "id": 130,
+   "text": "er",
+   "start": 11.28,
+   "duration": 0.08
+  },
+  {
+   "id": 1464,
+   "text": "ies",
+   "start": 11.36,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 11.52,
+   "duration": 0.08
+  },
+  {
+   "id": 128,
+   "text": "on",
+   "start": 11.52,
+   "duration": 0.08
+  },
+  {
+   "id": 150,
+   "text": " the",
+   "start": 11.68,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 11.76,
+   "duration": 0.08
+  },
+  {
+   "id": 1728,
+   "text": "wa",
+   "start": 11.76,
+   "duration": 0.08
+  },
+  {
+   "id": 129,
+   "text": "y",
+   "start": 11.76,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 11.92,
+   "duration": 0.08
+  },
+  {
+   "id": 276,
+   "text": "ho",
+   "start": 11.92,
+   "duration": 0.08
+  },
+  {
+   "id": 271,
+   "text": "me",
+   "start": 12.0,
+   "duration": 0.08
+  },
+  {
+   "id": 4,
+   "text": ".",
+   "start": 12.24,
+   "duration": 0.08
+  },
+  {
+   "id": 2,
+   "text": " ",
+   "start": 12.24,
+   "duration": 0.08
+  }
+ ],
+ "att_context_size": [
+  56,
+  13
+ ],
+ "language": "auto"
+}
