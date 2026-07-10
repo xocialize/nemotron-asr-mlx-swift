@@ -1,8 +1,18 @@
 # nemotron-asr-mlx-swift
 
+![platform](https://img.shields.io/badge/platform-macOS%2014%2B%20%C2%B7%20Apple%20Silicon-black)
+![swift](https://img.shields.io/badge/Swift-5.9-orange)
+![port code](https://img.shields.io/badge/port%20code-MIT-blue)
+![weights](https://img.shields.io/badge/weights-OpenMDW--1.1-green)
+
 MLX-Swift port of **NVIDIA Nemotron 3.5 ASR streaming** (`nvidia/nemotron-3.5-asr-streaming-0.6b`):
 a 600M cache-aware FastConformer-RNNT with language-ID prompt conditioning, transcribing
 40 language-locales with native punctuation/capitalization.
+
+Parity-locked against the Python `Blaizzy/mlx-audio` reference — every encoder sub-op
+(subsampling, all 24 cache-aware conformer blocks with cold and warm caches, prompt
+conditioning, decoder + joint) matches **bit-for-bit** on the CPU stream, and the end-to-end
+transcript (token ids + timestamps + auto-detected locale) is exact. ~27× realtime on the GPU.
 
 - **Reference:** Blaizzy/mlx-audio `mlx_audio/stt/models/nemotron_asr/` (MIT). File and
   module names mirror the reference 1:1 for parity diffing.
@@ -10,6 +20,25 @@ a 600M cache-aware FastConformer-RNNT with language-ID prompt conditioning, tran
   (bf16, ~1.2 GB; an `-8bit` variant exists). Weight license: OpenMDW-1.1 (permissive).
 - **Engine kit:** `mlx-nemotron-stt-swift` wraps this core as the MLXEngine `stt` capability
   package (`NemotronSTTPackage`). This core stays engine-free (no MLXToolKit import).
+
+## Install
+
+Add the package to your `Package.swift`:
+
+```swift
+.package(url: "https://github.com/xocialize/nemotron-asr-mlx-swift.git", from: "0.1.0"),
+```
+
+and the product to your target:
+
+```swift
+.product(name: "NemotronASR", package: "nemotron-asr-mlx-swift"),
+```
+
+> Building an app on the engine? Depend on the
+> [`mlx-nemotron-stt-swift`](https://github.com/xocialize/mlx-nemotron-stt-swift) kit instead —
+> it wraps this core as the MLXEngine `stt` capability and handles weight download + lifecycle.
+> Use this core directly only when you want the model without the engine.
 
 ## Quick start
 
