@@ -340,6 +340,10 @@ struct StreamGate: ParsableCommand {
         help: "Right context sizes to test (left context is fixed at 56).")
     var right: [Int] = [13, 0]
 
+    @Option(
+        help: "Also soak one session with the audio repeated N times, watching memory.")
+    var soak: Int?
+
     /// Deliberately awkward push sizes: sub-frame, sub-chunk, chunk-straddling, and
     /// larger-than-chunk, none of them hop multiples.
     static let pushSizes = [37, 1_600, 17_919, 160, 30_000, 511]
@@ -419,7 +423,62 @@ struct StreamGate: ParsableCommand {
         print("  \(stoppedEarly ? "PASS" : "FAIL")  cancel stops decoding (\(seen) partials)")
         ok = ok && stoppedEarly
 
+        if let soak { ok = runSoak(model: model, samples: samples, repeats: soak) && ok }
+
         guard ok else { throw ExitCode.failure }
+    }
+
+    /// One long session: memory must track the model, not the length of the stream. The mel
+    /// front-end keeps a fixed trailing window and the encoder caches are fixed-size, so a
+    /// climbing footprint means something is accumulating that shouldn't.
+    private func runSoak(model: NemotronASRModel, samples: [Float], repeats: Int) -> Bool {
+        let session = NemotronStreamingSession(model: model)
+        let bufferSize = 1_600  // 100 ms, the shape a microphone tap delivers
+        var baseline: UInt64 = 0
+        var peakAfterWarmup: UInt64 = 0
+        let audioSeconds = Double(samples.count * repeats) / 16_000.0
+        print("  soak: \(String(format: "%.1f", audioSeconds))s of audio through one session")
+
+        for pass in 0 ..< repeats {
+            var cursor = 0
+            while cursor < samples.count {
+                let end = min(cursor + bufferSize, samples.count)
+                session.push(Array(samples[cursor ..< end]))
+                cursor = end
+            }
+            let phys = physFootprint()
+            // Let the first pass settle (weights, kernels, warm caches) before comparing.
+            if pass == 0 {
+                baseline = phys
+            } else {
+                peakAfterWarmup = max(peakAfterWarmup, phys)
+            }
+            print(
+                "    pass \(pass + 1)/\(repeats): phys \(phys / 1_048_576) MB"
+                    + "  processed \(String(format: "%.1f", session.processedSeconds))s")
+        }
+        _ = session.finish()
+
+        guard repeats > 1 else { return true }
+        // Allow real headroom for allocator noise; a genuine leak grows per pass, not by a few MB.
+        let growth = Double(peakAfterWarmup) - Double(baseline)
+        let flat = growth < 250 * 1_048_576
+        print(
+            "  \(flat ? "PASS" : "FAIL")  memory flat across the session "
+                + "(\(String(format: "%+.0f", growth / 1_048_576)) MB after warmup)")
+        return flat
+    }
+
+    private func physFootprint() -> UInt64 {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(
+            MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        return result == KERN_SUCCESS ? info.phys_footprint : 0
     }
 
     private func batchTextCount(_ model: NemotronASRModel, _ wav: MLXArray) -> Int {
