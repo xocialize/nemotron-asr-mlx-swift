@@ -88,15 +88,32 @@ public enum NemotronAudio {
     public static func logMelSpectrogramFrames(
         _ x: MLXArray, _ args: PreprocessArgs, frameStart: Int, frameEnd: Int
     ) -> MLXArray {
-        let originalDtype = x.dtype
         var x = x
+        if args.padTo > 0 && x.dim(0) < args.padTo {
+            x = padded(x, widths: [IntOrPair((0, args.padTo - x.dim(0)))])
+        }
+        return logMelFrames(
+            buffer: x, bufferStart: 0, totalSamples: x.dim(0), args,
+            frameStart: frameStart, frameEnd: frameEnd)
+    }
+
+    /// Shared frame math for the whole-buffer path above and `NemotronStreamingSession`,
+    /// which only holds a trailing window of an arriving stream.
+    ///
+    /// `buffer` carries the samples starting at global index `bufferStart`, and must span
+    /// `[frameStart·hop − nFFT/2 − 1, min(sampleEnd, totalSamples))` — the extra leading
+    /// sample is the pre-emphasis look-back. Pass the global sample count as `totalSamples`
+    /// once the stream has ended, so the tail frames get the same right zero-padding a full
+    /// pass would apply; pass `nil` mid-stream, where the caller only asks for frames whose
+    /// windows have fully arrived.
+    static func logMelFrames(
+        buffer: MLXArray, bufferStart: Int, totalSamples: Int?, _ args: PreprocessArgs,
+        frameStart: Int, frameEnd: Int
+    ) -> MLXArray {
+        let originalDtype = buffer.dtype
 
         if frameEnd <= frameStart {
             return MLXArray.zeros([1, 0, args.features], dtype: originalDtype)
-        }
-
-        if args.padTo > 0 && x.dim(0) < args.padTo {
-            x = padded(x, widths: [IntOrPair((0, args.padTo - x.dim(0)))])
         }
 
         let hop = args.hopLength
@@ -104,16 +121,25 @@ public enum NemotronAudio {
         let numFrames = frameEnd - frameStart
         let sampleStart = frameStart * hop - nFFT / 2
         let sampleEnd = (frameEnd - 1) * hop - nFFT / 2 + nFFT
-        let totalSamples = x.dim(0)
+        let bufferEnd = bufferStart + buffer.dim(0)
+        let limit = totalSamples ?? bufferEnd
 
         let rawStart = max(sampleStart, 0)
-        let rawEnd = min(sampleEnd, totalSamples)
-        var raw = x[rawStart ..< rawEnd]
+        let rawEnd = min(sampleEnd, limit)
+        precondition(
+            rawStart >= bufferStart && rawEnd <= bufferEnd,
+            "frames [\(frameStart), \(frameEnd)) need samples [\(rawStart), \(rawEnd)), "
+                + "outside the buffered window [\(bufferStart), \(bufferEnd))")
+        var raw = buffer[(rawStart - bufferStart) ..< (rawEnd - bufferStart)]
 
         // Preemphasis with the same previous-sample state as a full-utterance pass.
         if args.preemph > 0 && raw.dim(0) > 0 {
             if rawStart > 0 {
-                let first = raw[0 ..< 1] - args.preemph * x[(rawStart - 1) ..< rawStart]
+                precondition(
+                    rawStart - 1 >= bufferStart,
+                    "pre-emphasis look-back sample \(rawStart - 1) is no longer buffered")
+                let prev = buffer[(rawStart - 1 - bufferStart) ..< (rawStart - bufferStart)]
+                let first = raw[0 ..< 1] - args.preemph * prev
                 let n = raw.dim(0)
                 raw = concatenated([first, raw[1 ..< n] - args.preemph * raw[0 ..< (n - 1)]], axis: 0)
             } else {
@@ -122,7 +148,7 @@ public enum NemotronAudio {
         }
 
         let leftPad = max(-sampleStart, 0)
-        let rightPad = max(sampleEnd - totalSamples, 0)
+        let rightPad = max(sampleEnd - limit, 0)
         var pieces: [MLXArray] = []
         if leftPad > 0 { pieces.append(MLXArray.zeros([leftPad], dtype: originalDtype)) }
         pieces.append(raw.asType(originalDtype))

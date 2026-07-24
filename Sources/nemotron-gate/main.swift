@@ -5,6 +5,7 @@
 // doctrine); GPU smoke and quant gates run on the GPU stream (quantized forwards
 // MUST NOT run under a CPU pin — they grind for hours with no error).
 
+import ASRMetrics
 import ArgumentParser
 import Foundation
 import MLX
@@ -79,7 +80,7 @@ struct NemotronGate: ParsableCommand {
         abstract: "Parity gates + transcribe for the Nemotron ASR MLX-Swift port.",
         subcommands: [
             KeyGate.self, MelGate.self, ComponentGate.self, E2EGate.self,
-            GPUSmoke.self, QuantGate.self, Transcribe.self,
+            GPUSmoke.self, QuantGate.self, StreamGate.self, Transcribe.self, WER.self,
         ])
 }
 
@@ -322,6 +323,130 @@ struct GPUSmoke: ParsableCommand {
                 + "  (RTF x\(String(format: "%.1f", audioSeconds / dt)))")
         print("  peak GPU memory: \(GPU.peakMemory / 1024 / 1024) MB")
         print("  PASS  gpu-smoke (non-empty: \(!transcription.result.text.isEmpty))")
+    }
+}
+
+struct StreamGate: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "stream-gate",
+        abstract: "A live session fed ragged pushes must equal the whole-buffer transcription.")
+    @OptionGroup var options: GateOptions
+
+    @Option(help: "Audio to stream. Defaults to the mel_full golden waveform.")
+    var audio: String?
+
+    @Option(
+        parsing: .upToNextOption,
+        help: "Right context sizes to test (left context is fixed at 56).")
+    var right: [Int] = [13, 0]
+
+    /// Deliberately awkward push sizes: sub-frame, sub-chunk, chunk-straddling, and
+    /// larger-than-chunk, none of them hop multiples.
+    static let pushSizes = [37, 1_600, 17_919, 160, 30_000, 511]
+
+    func run() throws {
+        let ctx = try options.context()
+        let model = try NemotronLoad.load(directory: ctx.modelDir)
+        let wav =
+            try audio.map { try loadWav16kMono(URL(fileURLWithPath: $0)) }
+            ?? ctx.golden("mel_full.safetensors")["wav"]!
+        let samples = wav.asArray(Float.self)
+        print("  \(String(format: "%.1f", Double(samples.count) / 16000.0))s audio")
+
+        var ok = true
+        for r in right {
+            let acs = [56, r]
+            var batchPartials = 0
+            let batch = model.streamGenerate(
+                wav, attContextSize: acs, onPartial: { _ in batchPartials += 1 })
+
+            let session = NemotronStreamingSession(model: model, attContextSize: acs)
+            var livePartials = 0
+            var cursor = 0
+            var sizeIndex = 0
+            while cursor < samples.count {
+                let size = Self.pushSizes[sizeIndex % Self.pushSizes.count]
+                sizeIndex += 1
+                let end = min(cursor + size, samples.count)
+                session.push(Array(samples[cursor ..< end]), onPartial: { _ in livePartials += 1 })
+                cursor = end
+            }
+            let live = session.finish(onPartial: { _ in livePartials += 1 })
+
+            let same = live.result == batch.result
+            let sameLang = live.detectedLanguage == batch.detectedLanguage
+            let samePartials = livePartials == batchPartials
+            ok = ok && same && sameLang && samePartials
+            print(
+                "  \(same && sameLang && samePartials ? "PASS" : "FAIL")  acs \(acs): "
+                    + "result \(same ? "==" : "!=") batch, language \(sameLang ? "==" : "!="), "
+                    + "\(livePartials) partials vs \(batchPartials)")
+            if !same {
+                print("    batch: \(batch.result.text)")
+                print("    live : \(live.result.text)")
+            }
+            // Timestamps must be absolute and non-decreasing across chunk boundaries.
+            let starts = live.result.sentences.flatMap { $0.tokens.map(\.start) }
+            if starts != starts.sorted() {
+                print("    FAIL  token starts are not monotonic")
+                ok = false
+            }
+            let audioSeconds = Double(samples.count) / 16000.0
+            if session.processedSeconds > audioSeconds + 1.5
+                || session.processedSeconds < audioSeconds - 1.5
+            {
+                print(
+                    "    FAIL  processedSeconds \(session.processedSeconds) "
+                        + "≉ \(audioSeconds) audio seconds")
+                ok = false
+            }
+        }
+
+        // Cancelling mid-stream stops decoding and still returns what was decoded.
+        let cancelled = NemotronStreamingSession(model: model)
+        var seen = 0
+        var cursor = 0
+        while cursor < samples.count, !cancelled.isCancelled {
+            let end = min(cursor + 16_000, samples.count)
+            cancelled.push(Array(samples[cursor ..< end])) { _ in
+                seen += 1
+                if seen >= 2 { cancelled.cancel() }
+            }
+            cursor = end
+        }
+        let partial = cancelled.finish()
+        let stoppedEarly = cancelled.isCancelled && partial.result.text.count < batchTextCount(model, wav)
+        print("  \(stoppedEarly ? "PASS" : "FAIL")  cancel stops decoding (\(seen) partials)")
+        ok = ok && stoppedEarly
+
+        guard ok else { throw ExitCode.failure }
+    }
+
+    private func batchTextCount(_ model: NemotronASRModel, _ wav: MLXArray) -> Int {
+        model.streamGenerate(wav).result.text.count
+    }
+}
+
+struct WER: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "wer",
+        abstract: "Score a hypothesis against a reference transcript.")
+
+    @Argument(help: "Reference transcript.") var reference: String
+    @Argument(help: "Hypothesis transcript.") var hypothesis: String
+
+    func run() throws {
+        let r = ASRMetrics.wordErrorRate(reference: reference, hypothesis: hypothesis)
+        print("  WER \(String(format: "%.2f", r.werPercent))%  (N=\(r.referenceCount))")
+        print("  S=\(r.substitutions)  D=\(r.deletions)  I=\(r.insertions)")
+        for op in r.ops {
+            switch op {
+            case .match(let w, _): print("    = \(w)")
+            case .substitution(let ref, let hyp): print("    ~ \(ref) → \(hyp)")
+            case .deletion(let ref): print("    - \(ref)")
+            case .insertion(let hyp): print("    + \(hyp)")
+            }
+        }
     }
 }
 

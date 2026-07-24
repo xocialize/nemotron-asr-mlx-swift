@@ -64,7 +64,8 @@ final class StreamEncoder {
     private let model: NemotronASRModel
     private let language: String?
     private let leftCache: Int
-    private let chunkMel: Int
+    /// Mel frames per native encode chunk (`chunkFrames × subsamplingFactor`).
+    let chunkMel: Int
     private let convLeft: Int
     private let subsamplingFactor: Int
 
@@ -135,6 +136,8 @@ final class StreamEncoder {
             attnCache[li] = attnNext
             convCache[li] = convNext
         }
+        // Materialize the caches so a long stream carries state, not a growing graph.
+        eval(attnCache.compactMap { $0 } + convCache.compactMap { $0 } + [melCache].compactMap { $0 })
         try onPromptedChunk(model.applyPrompt(h, language: language))
     }
 

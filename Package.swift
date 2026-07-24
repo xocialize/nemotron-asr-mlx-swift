@@ -19,6 +19,8 @@ let package = Package(
     ],
     products: [
         .library(name: "NemotronASR", targets: ["NemotronASR"]),
+        // WER scoring, usable on its own (no MLX) to grade any transcript pair.
+        .library(name: "ASRMetrics", targets: ["ASRMetrics"]),
         .executable(name: "nemotron-gate", targets: ["nemotron-gate"]),
     ],
     dependencies: [
@@ -40,16 +42,22 @@ let package = Package(
             ],
             resources: [.copy("Resources/mel_filters_slaney_128.safetensors")]
         ),
+        .target(name: "ASRMetrics"),
         .executableTarget(
             name: "nemotron-gate",
             dependencies: [
                 "NemotronASR",
+                "ASRMetrics",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
         .testTarget(
             name: "NemotronASRTests",
             dependencies: ["NemotronASR"]
+        ),
+        .testTarget(
+            name: "ASRMetricsTests",
+            dependencies: ["ASRMetrics"]
         ),
     ]
 )

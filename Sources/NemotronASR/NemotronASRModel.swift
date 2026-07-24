@@ -160,6 +160,9 @@ public final class NemotronASRModel: Module {
     /// (mirrors the reference generator's per-chunk yield) and returns the final
     /// result. `shouldContinue` is polled per chunk — returning `false` stops early
     /// (the package layer maps this to cooperative cancellation).
+    ///
+    /// This drives a `NemotronStreamingSession` over already-captured audio; feed a session
+    /// directly to transcribe audio that is still arriving.
     @discardableResult
     public func streamGenerate(
         _ audio: MLXArray,
@@ -170,37 +173,25 @@ public final class NemotronASRModel: Module {
         onPartial: ((AlignedResult) -> Void)? = nil,
         shouldContinue: @escaping () -> Bool = { true }
     ) -> Transcription {
-        defer { MLX.GPU.clearCache() }
+        let session = NemotronStreamingSession(
+            model: self, language: language, chunkFrames: chunkFrames,
+            attContextSize: attContextSize, melChunkDuration: chunkDuration)
 
-        let streamEncoder = StreamEncoder(
-            model: self, language: language ?? defaultLanguage,
-            chunkFrames: chunkFrames, attContextSize: attContextSize)
-        var state = DecodeState(lastToken: blankId, decoderHidden: nil)
-        var stopped = false
-
-        let handleChunk: (MLXArray) -> Void = { prompted in
-            guard !stopped else { return }
-            self.decodePromptedChunk(prompted, state: &state)
-            let partial = sentencesToResult(tokensToSentences(state.hypothesis))
+        let relay: (AlignedResult) -> Void = { partial in
             onPartial?(partial)
-            MLX.GPU.clearCache()
-            if !shouldContinue() { stopped = true }
+            if !shouldContinue() { session.cancel() }
         }
 
-        NemotronAudio.iterLogMelSpectrogram(
-            audio, preprocessorConfig,
-            chunkFrames: melChunkFrames(chunkDuration: chunkDuration)
-        ) { melChunk in
-            guard !stopped else { return }
-            streamEncoder.push(melChunk, handleChunk)
+        // Push in mel-chunk strides so STFT memory stays bounded on long audio.
+        let step = melChunkFrames(chunkDuration: chunkDuration) * preprocessorConfig.hopLength
+        let total = audio.dim(0)
+        var start = 0
+        while start < total, !session.isCancelled {
+            let end = min(start + step, total)
+            session.push(audio[start ..< end], onPartial: relay)
+            start = end
         }
-        if !stopped {
-            streamEncoder.finish(handleChunk)
-        }
-
-        return Transcription(
-            result: sentencesToResult(tokensToSentences(state.hypothesis)),
-            detectedLanguage: state.detectedLanguage)
+        return session.finish(onPartial: relay)
     }
 
     /// Transcribe a complete utterance (16 kHz mono waveform). `language` is a prompt
