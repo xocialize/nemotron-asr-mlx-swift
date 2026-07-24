@@ -61,6 +61,11 @@ public enum NemotronLoad {
     }
 
     /// Load the model from a directory containing config.json + *.safetensors.
+    ///
+    /// If the checkpoint carries `quantization` metadata (mlx-community `-8bit` repos) OR
+    /// per-Linear `.scales` tensors are present, the matching layers are quantized before the
+    /// weights are applied. `verify` relaxes to `.none` for quantized checkpoints (the quantized
+    /// Linear swaps the parameter set, so a strict all-keys match no longer holds).
     public static func load(directory: URL) throws -> NemotronASRModel {
         let configURL = directory.appendingPathComponent("config.json")
         guard FileManager.default.fileExists(atPath: configURL.path) else {
@@ -84,9 +89,28 @@ public enum NemotronLoad {
         }
         weights = sanitize(weights)
 
+        // Quantized checkpoint? Apply the same quantization to the module tree so shapes line up.
+        let isQuantized = weights.keys.contains { $0.hasSuffix(".scales") }
+        if isQuantized, let q = quantMetadata(configURL: configURL) {
+            quantize(model: model, groupSize: q.groupSize, bits: q.bits) { path, module in
+                module is MLXNN.Linear && weights["\(path).scales"] != nil
+            }
+        }
+
         try model.update(
-            parameters: ModuleParameters.unflattened(weights), verify: [.all])
+            parameters: ModuleParameters.unflattened(weights),
+            verify: isQuantized ? [] : [.all])
         eval(model.parameters())
         return model
+    }
+
+    private static func quantMetadata(configURL: URL) -> (groupSize: Int, bits: Int)? {
+        guard let data = try? Data(contentsOf: configURL),
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let q = json["quantization"] as? [String: Any]
+        else { return nil }
+        let groupSize = (q["group_size"] as? Int) ?? 64
+        let bits = (q["bits"] as? Int) ?? 8
+        return (groupSize, bits)
     }
 }

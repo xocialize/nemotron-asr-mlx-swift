@@ -4,3 +4,4 @@
 PORTING/oracle/.venv/
 PORTING/audio/*.wav
 # Goldens are kept (small) as the parity fixtures; weights are not vendored.
+.DS_Store
