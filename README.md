@@ -101,10 +101,20 @@ swift run nemotron-gate e2e-gate            # full transcript parity vs Python (
 swift run nemotron-gate gpu-smoke           # GPU-stream run + RTF
 swift run nemotron-gate stream-gate         # live session (ragged pushes) == batch, exactly
 swift run nemotron-gate wer "reference" "hypothesis"
+swift run -c release nemotron-gate creep --model-dir $M --wav long.wav   # memory vs session length
 ```
 
 Gates compare against Python-oracle goldens in `PORTING/goldens/`
 (regenerate with `PORTING/oracle/capture_goldens.py`).
+
+`creep` is a diagnostic, not a gate. It streams a wav through one live session in 100 ms pushes
+and prints, every minute of audio and between pushes, phys_footprint beside MLX's live arrays,
+its pool and the malloc heap. On a 45-minute English file at Dictate's `[56, 3]` (bf16, M5 Max,
+2026-09-23), live arrays held at 1.325 GB, the pool under 0.06 GB, and the heap at 0.182–0.183 GB
+(the growing transcript is the only thing in it). phys settled at ~2.2 GB after the warm-up. So
+the session needs no per-step `autoreleasepool`, unlike R2T2's loop (qwen3-asr-mlx-swift 0.1.3).
+MLX drains its own Metal objects inside each eval, and no chunk autoreleases Foundation objects in
+volume: the language-tag regex leaves about 0.2 KB per minute.
 
 ## Architecture notes (port-critical)
 

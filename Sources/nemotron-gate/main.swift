@@ -48,6 +48,10 @@ func check(_ name: String, _ diff: Float, threshold: Float) -> Bool {
 }
 
 func loadWav16kMono(_ url: URL) throws -> MLXArray {
+    MLXArray(try loadWav16kMonoSamples(url))
+}
+
+func loadWav16kMonoSamples(_ url: URL) throws -> [Float] {
     // Minimal 16-bit PCM mono WAV reader (test inputs are afconvert LEI16@16000).
     let data = try Data(contentsOf: url)
     guard data.count > 44 else { throw ValidationError("not a wav file") }
@@ -65,7 +69,7 @@ func loadWav16kMono(_ url: URL) throws -> MLXArray {
                 let int16 = raw.bindMemory(to: Int16.self)
                 return int16.map { Float(Int16(littleEndian: $0)) / 32768.0 }
             }
-            return MLXArray(samples)
+            return samples
         }
         offset += 8 + size + (size % 2)
     }
@@ -80,7 +84,7 @@ struct NemotronGate: ParsableCommand {
         abstract: "Parity gates + transcribe for the Nemotron ASR MLX-Swift port.",
         subcommands: [
             KeyGate.self, MelGate.self, ComponentGate.self, E2EGate.self,
-            GPUSmoke.self, QuantGate.self, StreamGate.self, Transcribe.self, WER.self,
+            GPUSmoke.self, QuantGate.self, StreamGate.self, Creep.self, Transcribe.self, WER.self,
         ])
 }
 
