@@ -113,7 +113,7 @@ struct KeyGate: ParsableCommand {
     @OptionGroup var options: GateOptions
 
     func run() throws {
-        Device.setDefault(device: Device.cpu)
+        Device.setDefault(device: Device(.cpu))
         let ctx = try options.context()
         let model = try NemotronLoad.load(directory: ctx.modelDir)
         let count = model.parameters().flattened().count
@@ -128,7 +128,7 @@ struct MelGate: ParsableCommand {
     @OptionGroup var options: GateOptions
 
     func run() throws {
-        Device.setDefault(device: Device.cpu)
+        Device.setDefault(device: Device(.cpu))
         let ctx = try options.context()
         let g = try ctx.golden("mel_full.safetensors")
         let config = try NemotronASRConfig.load(
@@ -158,7 +158,7 @@ struct ComponentGate: ParsableCommand {
     @OptionGroup var options: GateOptions
 
     func run() throws {
-        Device.setDefault(device: Device.cpu)
+        Device.setDefault(device: Device(.cpu))
         let ctx = try options.context()
         let model = try NemotronLoad.load(directory: ctx.modelDir)
         var ok = true
@@ -248,7 +248,7 @@ struct E2EGate: ParsableCommand {
     @OptionGroup var options: GateOptions
 
     func run() throws {
-        Device.setDefault(device: Device.cpu)
+        Device.setDefault(device: Device(.cpu))
         let ctx = try options.context()
         let model = try NemotronLoad.load(directory: ctx.modelDir)
 
